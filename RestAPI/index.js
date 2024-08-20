@@ -1,8 +1,13 @@
 const express = require("express");
+const fs = require("fs");
 const users = require("./testData.json");
 
 const app = express();
 const PORT = 3000;
+
+//Middlewares
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // Routes
 
@@ -27,7 +32,11 @@ app.get("/api/users", (req, res) => {
 });
 
 app.post("/api/users", (req, res) => {
-  return res.json({ status: "PENDING" });
+  const body = req.body;
+  users.push({ ...body, id: users.length + 1 });
+  fs.writeFile("./testData.json", JSON.stringify(users), (err, data) => {
+    return res.json({ status: "Success", id: users.length });
+  });
 });
 
 // Multiple http method requests on a single route
@@ -40,11 +49,45 @@ app
     return res.json(user);
   })
   .patch((req, res) => {
-    return res.json({ status: "PENDING" });
+    const userID = parseInt(req.params.id);
+    const updatedData = req.body;
+    const user = users.find((user) => user.id === userID);
+
+    if (!user) {
+      return res.status(404).send("User Not Found");
+    }
+
+    user.first_name = updatedData.first_name || user.first_name;
+    user.last_name = updatedData.last_name || user.last_name;
+    user.email = updatedData.email || user.email;
+    user.gender = updatedData.gender || user.gender;
+    user.job_title = updatedData.job_title || user.job_title;
+
+    fs.writeFile("./testData.json", JSON.stringify(users), (err) => {
+      if (err) {
+        return res.status(500).json({ status: "Error writing to file" });
+      }
+      return res.json({ status: "User Data Updated", user });
+    });
   })
   .delete((req, res) => {
-    return res.json({ status: "PENDING" });
-  });
+    const userID = parseInt(req.params.id);
+    const userIndex = users.findIndex((user) => user.id === userID);
+
+    if (userIndex === -1) {
+        return res.status(404).send("User Not Found");
+    }
+
+    users.splice(userIndex, 1);
+
+    fs.writeFile("./testData.json", JSON.stringify(users), (err) => {
+        if (err) {
+            return res.status(500).json({ status: "Error writing to file" });
+        }
+        return res.json({ status: "User Deleted" });
+    });
+});
+
 
 // app.get('/api/users/:id', (req, res) => {
 //     const id = Number(req.params.id);
