@@ -1,16 +1,44 @@
 const express = require("express");
 const fs = require("fs");
+const mongoose = require("mongoose");
 const users = require("./testData.json");
 
 const app = express();
 const PORT = 3000;
+
+//MongoDB connection
+const mongoURI = 'mongodb+srv://abh1nav:Abh1nav%4009@taskmanager.9z2q7q7.mongodb.net/?retryWrites=true&w=majority'; // Ensure this URI is correct
+mongoose
+.connect(mongoURI)
+.then(() => console.log("MongoDB Connected"))
+.catch((err) => console.log("Error", err));
+
+
+
+//Schema
+const userSchema = new mongoose.Schema({
+  firstName:{
+    type: String,
+    required: true,
+  },
+  lastName:{
+    type: String,
+  },
+  email:{
+    type: String,
+    required: true,
+    unique: true,
+  },
+});
+
+//Schema to Model
+const User = mongoose.model("user", userSchema);
 
 //Middlewares
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Routes
-
 // HTML Demo
 
 app.get("/users", (req, res) => {
