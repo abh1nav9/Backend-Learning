@@ -1,10 +1,12 @@
 const express = require("express");
 const path = require("path");
+const cookieParser = require("cookie-parser");
 
 const urlRoute = require("./routes/url");
 const staticRoute = require("./routes/staticRouter");
 const userRoute = require("./routes/user");
 
+const { restrictToLoggedInUserOnly } = require("./middlewares/auth");
 const { connectToMongoDb } = require("./connection");
 const URL = require("./models/url");
 const PORT = 8000;
@@ -15,8 +17,9 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
+app.use(cookieParser());
 
-app.use("/", staticRoute);
+app.use("/", restrictToLoggedInUserOnly, staticRoute);
 app.use("/url", urlRoute);
 app.use("/user", userRoute);
 
